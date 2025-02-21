@@ -5,15 +5,15 @@ from torch.nn import functional as F
 
 # hyperparameters
 batch_size = 64 # how many independent sequences will we process in parallel?
-block_size = 32 # what is the maximum context length for predictions?
+block_size = 64 # what is the maximum context length for predictions?
 max_iters = 5000
-eval_interval = 50
+eval_interval = 100
 learning_rate = 3e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 eval_iters = 200
-n_embd = 32
+n_embd = 64
 n_head = 4
-n_layer = 2
+n_layer = 4
 dropout = 0.2
 # ------------
 
@@ -22,6 +22,12 @@ dropout = 0.2
 # wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
 with open('input.txt', 'r', encoding='utf-8') as f:
     text = f.read()
+
+with open('gpt_more.txt', 'r', encoding='utf-8') as f:
+    gpt_more = f.read()
+
+with open('stateful_gpt_more.txt', 'r', encoding='utf-8') as f:
+    stateful_gpt_more = f.read()
 
 # here are all the unique characters that occur in this text
 chars = sorted(list(set(text)))
@@ -38,10 +44,20 @@ n = int(0.9*len(data)) # first 90% will be train, rest val
 train_data = data[:n]
 val_data = data[n:]
 
+gpt_more_data = torch.tensor(encode(gpt_more), dtype=torch.long)
+stateful_gpt_more_data = torch.tensor(encode(stateful_gpt_more), dtype=torch.long)
+
+splits = {
+    'train': train_data,
+    'val': val_data,
+    'gpt_more': gpt_more_data,
+    'stateful_gpt_more': stateful_gpt_more_data,
+}
+
 # data loading
 def get_batch(split):
     # generate a small batch of data of inputs x and targets y
-    data = train_data if split == 'train' else val_data
+    data = splits[split]
     ix = torch.randint(len(data) - block_size, (batch_size,))
     x = torch.stack([data[i:i+block_size] for i in ix])
     y = torch.stack([data[i+1:i+block_size+1] for i in ix])
@@ -49,10 +65,10 @@ def get_batch(split):
     return x, y
 
 @torch.no_grad()
-def estimate_loss():
+def estimate_loss(s):
     out = {}
     model.eval()
-    for split in ['train', 'val']:
+    for split in s:
         losses = torch.zeros(eval_iters)
         for k in range(eval_iters):
             X, Y = get_batch(split)
@@ -221,13 +237,9 @@ print(sum(p.numel() for p in m.parameters())/1e6, 'M parameters')
 
 # torch.save(model.state_dict(), 'base_model.pt')
 
-model.load_state_dict(torch.load('/home/eloi/Documents/Test Stateful Transformer/base_model.pt', map_location=torch.device('cpu')))
-
-model.eval()
+model.load_state_dict(torch.load('/home/eloi/Documents/Test Stateful Transformer/evaluation_model.pt', map_location=torch.device('cpu')))
 
 # generate from the model
-context = torch.zeros((1, 1), dtype=torch.long, device=device)
-# generated = decode(m.generate(context, max_new_tokens=500)[0].tolist())
-# print(generated)
-with open('gpt_more.txt', 'w+') as file:
-    file.write(decode(m.generate(context, max_new_tokens=10000)[0].tolist()))
+model.eval()
+losses = estimate_loss(['gpt_more', 'stateful_gpt_more'])
+print(f"gpt_more loss {losses['gpt_more']:.4f}, stateful_gpt_more loss {losses['stateful_gpt_more']:.4f}")

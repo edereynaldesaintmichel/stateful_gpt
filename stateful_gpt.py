@@ -5,19 +5,21 @@ from torch.nn import functional as F
 
 # hyperparameters
 batch_size = 64 # how many independent sequences will we process in parallel?
-block_size = 256 # what is the maximum context length for predictions?
+block_size = 32 # what is the maximum context length for predictions?
 max_iters = 5000
-eval_interval = 500
+eval_interval = 50
 learning_rate = 3e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 eval_iters = 200
-n_embd = 384
-n_head = 6
-n_layer = 6
+n_embd = 32
+n_head = 4
+n_layer = 2
 dropout = 0.2
+recursion_steps = 1
+contribution_coeff = 1
 # ------------
 
-torch.manual_seed(1337)
+# torch.manual_seed(1337)
 
 # wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
 with open('input.txt', 'r', encoding='utf-8') as f:
@@ -56,7 +58,9 @@ def estimate_loss():
         losses = torch.zeros(eval_iters)
         for k in range(eval_iters):
             X, Y = get_batch(split)
-            logits, loss = model(X, Y)
+            logits, loss, hidden_states = model(X, Y)
+            for i in range(recursion_steps):
+                logits, loss, hidden_states = model(X, Y, hidden_states)
             losses[k] = loss.item()
         out[split] = losses.mean()
     model.train()
@@ -137,15 +141,20 @@ class Block(nn.Module):
         return x
 
 class GPTLanguageModel(nn.Module):
-
     def __init__(self):
         super().__init__()
         # each token directly reads off the logits for the next token from a lookup table
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
         self.position_embedding_table = nn.Embedding(block_size, n_embd)
         self.blocks = nn.Sequential(*[Block(n_embd, n_head=n_head) for _ in range(n_layer)])
+        self.ln_s = nn.LayerNorm(n_embd) # token_embeddings layer norm
         self.ln_f = nn.LayerNorm(n_embd) # final layer norm
         self.lm_head = nn.Linear(n_embd, vocab_size)
+        self.logits_embedding = nn.Sequential(
+            nn.Linear(n_embd, 2*n_embd),
+            nn.ReLU(),
+            nn.Linear(2*n_embd, n_embd)
+        )
 
         # better init, not covered in the original GPT video, but important, will cover in followup video
         self.apply(self._init_weights)
@@ -158,11 +167,19 @@ class GPTLanguageModel(nn.Module):
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, idx, targets=None):
+    def forward(self, idx, targets=None, prev_hidden_states=None):
         B, T = idx.shape
 
         # idx and targets are both (B,T) tensor of integers
         tok_emb = self.token_embedding_table(idx) # (B,T,C)
+        # tok_emb = self.ln_s(tok_emb)
+
+        if prev_hidden_states is not None:
+            shifted_hidden_states = torch.zeros_like(prev_hidden_states)
+            shifted_hidden_states[:, 1:] = self.logits_embedding(prev_hidden_states[:, :-1])
+            previous_logits_embedding_contribution = shifted_hidden_states[:,-32:, :]
+            tok_emb = tok_emb + previous_logits_embedding_contribution * contribution_coeff
+
         pos_emb = self.position_embedding_table(torch.arange(T, device=device)) # (T,C)
         x = tok_emb + pos_emb # (B,T,C)
         x = self.blocks(x) # (B,T,C)
@@ -177,22 +194,19 @@ class GPTLanguageModel(nn.Module):
             targets = targets.view(B*T)
             loss = F.cross_entropy(logits, targets)
 
-        return logits, loss
+        return logits, loss, x
 
     def generate(self, idx, max_new_tokens):
         # idx is (B, T) array of indices in the current context
+        hidden_states = None
         for _ in range(max_new_tokens):
-            # crop idx to the last block_size tokens
             idx_cond = idx[:, -block_size:]
-            # get the predictions
-            logits, loss = self(idx_cond)
-            # focus only on the last time step
+            logits, loss, hidden_states = self.forward(idx_cond, None, hidden_states)
+            padding = torch.zeros(hidden_states.size(0), 1, hidden_states.size(2), device=hidden_states.device, dtype=hidden_states.dtype)
+            hidden_states = torch.cat((hidden_states, padding), dim=1)
             logits = logits[:, -1, :] # becomes (B, C)
-            # apply softmax to get probabilities
             probs = F.softmax(logits, dim=-1) # (B, C)
-            # sample from the distribution
             idx_next = torch.multinomial(probs, num_samples=1) # (B, 1)
-            # append sampled index to the running sequence
             idx = torch.cat((idx, idx_next), dim=1) # (B, T+1)
         return idx
 
@@ -201,26 +215,38 @@ m = model.to(device)
 # print the number of parameters in the model
 print(sum(p.numel() for p in m.parameters())/1e6, 'M parameters')
 
-# create a PyTorch optimizer
-optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+model.load_state_dict(torch.load('/home/eloi/Documents/Test Stateful Transformer/stateful_model_2.pt', map_location=torch.device('cpu')))
 
-for iter in range(max_iters):
+# # create a PyTorch optimizer
+# optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
-    # every once in a while evaluate the loss on train and val sets
-    if iter % eval_interval == 0 or iter == max_iters - 1:
-        losses = estimate_loss()
-        print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+# for iter in range(max_iters):
 
-    # sample a batch of data
-    xb, yb = get_batch('train')
+#     # every once in a while evaluate the loss on train and val sets
+#     if iter % eval_interval == 0 or iter == max_iters - 1:
+#         losses = estimate_loss()
+#         print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
 
-    # evaluate the loss
-    logits, loss = model(xb, yb)
-    optimizer.zero_grad(set_to_none=True)
-    loss.backward()
-    optimizer.step()
+#     # sample a batch of data
+#     xb, yb = get_batch('train')
+
+#     # evaluate the loss
+#     logits, loss, hidden_states = model(xb, yb)
+
+#     for i in range(recursion_steps):
+#         logits, loss, hidden_states = model(xb, yb, hidden_states)
+
+#     optimizer.zero_grad(set_to_none=True)
+#     loss.backward()
+#     optimizer.step()
+
+# torch.save(model.state_dict(), 'stateful_model.pt')
 
 # generate from the model
+model.eval()
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
 print(decode(m.generate(context, max_new_tokens=500)[0].tolist()))
+
+with open('stateful_gpt_more.txt', 'w+') as file:
+    file.write(decode(m.generate(context, max_new_tokens=10000)[0].tolist()))
 #open('more.txt', 'w').write(decode(m.generate(context, max_new_tokens=10000)[0].tolist()))
