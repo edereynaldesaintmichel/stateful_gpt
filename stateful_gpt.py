@@ -15,7 +15,7 @@ n_embd = 32
 n_head = 4
 n_layer = 2
 dropout = 0.2
-recursion_steps = 1
+recursion_steps = 3
 contribution_coeff = 1
 # ------------
 
@@ -215,8 +215,6 @@ m = model.to(device)
 # print the number of parameters in the model
 print(sum(p.numel() for p in m.parameters())/1e6, 'M parameters')
 
-model.load_state_dict(torch.load('/home/eloi/Documents/Test Stateful Transformer/stateful_model_2.pt', map_location=torch.device('cpu')))
-
 # # create a PyTorch optimizer
 # optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
@@ -242,7 +240,7 @@ model.load_state_dict(torch.load('/home/eloi/Documents/Test Stateful Transformer
 
 # torch.save(model.state_dict(), 'stateful_model.pt')
 
-# generate from the model
+model.load_state_dict(torch.load('/home/eloi/Documents/Test Stateful Transformer/stateful_model_2.pt', map_location=torch.device('cpu'))) 
 model.eval()
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
 print(decode(m.generate(context, max_new_tokens=500)[0].tolist()))
