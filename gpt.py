@@ -13,7 +13,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 eval_iters = 200
 n_embd = 32
 n_head = 4
-n_layer = 2
+n_layer = 3
 dropout = 0.2
 # ------------
 
@@ -221,7 +221,7 @@ print(sum(p.numel() for p in m.parameters())/1e6, 'M parameters')
 
 # torch.save(model.state_dict(), 'base_model.pt')
 
-model.load_state_dict(torch.load('/home/eloi/Documents/Test Stateful Transformer/base_model.pt', map_location=torch.device('cpu')))
+model.load_state_dict(torch.load('/home/eloi/Documents/Test Stateful Transformer/base_model_1.pt', map_location=torch.device('cpu')))
 
 model.eval()
 

@@ -10,10 +10,10 @@ max_iters = 5000
 eval_interval = 100
 learning_rate = 3e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-eval_iters = 200
-n_embd = 64
-n_head = 4
-n_layer = 4
+eval_iters = 50
+n_embd = 128
+n_head = 6
+n_layer = 6
 dropout = 0.2
 # ------------
 
@@ -235,9 +235,9 @@ print(sum(p.numel() for p in m.parameters())/1e6, 'M parameters')
 #     loss.backward()
 #     optimizer.step()
 
-# torch.save(model.state_dict(), 'base_model.pt')
+# torch.save(model.state_dict(), 'evaluation_model.pt')
 
-model.load_state_dict(torch.load('/home/eloi/Documents/Test Stateful Transformer/evaluation_model.pt', map_location=torch.device('cpu')))
+model.load_state_dict(torch.load('/home/eloi/Documents/Test Stateful Transformer/evaluation_model_2.pt', map_location=torch.device('cpu')))
 
 # generate from the model
 model.eval()
