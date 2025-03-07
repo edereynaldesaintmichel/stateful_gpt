@@ -35,4 +35,10 @@ The discrepancy between training and inference is addressed by ensuring stabilit
 
 More formally, training ensures that:
 
-$CE_{loss}(T_n) < CE_{loss}(T_0)$ for every recurrence depth n during training. Otherwise, the model would just learn to not use any hidden state's information.
+$CE_{loss}(T_n) < CE_{loss}(T_0)$ for every recurrence depth n during training. Otherwise, the model would just learn to not use any hidden state's information. Even though it doesn't formally imply that this inequality holds even for recurrence depth not seen during training, it is empirically observed.
+
+## Practical observations
+
+This architecture, although theoretically promising, is only useful for very shallow transformers. Indeed, the parallelized training performs multiple backpropagation steps consecutively on each batch of data, which necessitates do dial down the learning rate of recurrence training. This implies that, even though the stateful transformer far exceeds the performance of a vanilla transformer in terms of performance vs. number of training epochs, it lags behind when the compute intesnity of each epoch is taken into account.
+
+It should be noted, though, that even accounting for the compute overhead, the stateful transfomrer outperforms the base architecture for very shallow transformers. Hence the "*partial* failure mentioned above. You can test the above stateful_gpt.py with n_layers = 2 to observe that.
