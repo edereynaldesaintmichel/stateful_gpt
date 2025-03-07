@@ -43,4 +43,4 @@ This architecture, although theoretically promising, is only useful for very sha
 
 It should be noted, though, that even accounting for the compute overhead, the stateful transfomrer outperforms the base architecture for very shallow transformers. Hence the "**partial**" failure mentioned above. You can test this by setting n_layers = 2 in the stateful_gpt.py training script.
 
-Also, for a fully trained Stateful Transformer, Norm(enrichment) ~ Norm(token_embeddings) * 0.2, meaning that some information indeed flows through the recurrent connection. It's just not worth the training overhead, in most cases.
+Also, for a fully trained Stateful Transformer, Norm(enrichment) ~ Norm(token_embeddings) * 0.2, meaning that some information indeed flows through the recurrent connection. It's just not worth the compute overhead, in most cases.
