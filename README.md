@@ -34,4 +34,5 @@ To mitigate the parallelization issue, a parallel training technique was devised
 The discrepancy between training and inference is addressed by ensuring stability during training. If the CE loss remains controlled with increased recurrence depth during training, the model should be stable even with theoretically infinite recurrence depth during inference.
 
 More formally, training ensures that:
-$CE_{loss}(T_n) < CE_{loss}(T_0)$$ for every recurrence depth n during training. Otherwise, the model would just learn to not use any hidden state's information.
+
+$CE_{loss}(T_n) < CE_{loss}(T_0)$ for every recurrence depth n during training. Otherwise, the model would just learn to not use any hidden state's information.
