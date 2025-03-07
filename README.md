@@ -10,8 +10,8 @@ Enrich token embeddings with the last hidden state of the inference step that ge
 
 I used a custom architecture, similar to attention and LSTM input gates:
 
-*   **Component-wise key-query attention:** Token embeddings act as queries, and `nn.Linear(hidden_states)` provides the keys.
-*   `nn.Linear(hidden_states)` generates the values.
+*   **Component-wise key-query attention:** Token embeddings act as queries, and a `nn.Linear(hidden_states)` projection provides the keys.
+*   Another `nn.Linear(hidden_states)` projection generates the values.
 *   The values are added to the token embeddings, weighted by the component-wise attention score.
 
 ## Theoretical Challenge
