@@ -35,8 +35,4 @@ The discrepancy between training and inference is addressed by ensuring stabilit
 
 More formally, training ensures that:
 
-```html
-KL divergence(stateful_transformer_depth_of_n || stateful_transformer_depth_of_n_plus_one) &lt; KL_divergence(stateful_transformer_depth_of_n_minus_one || stateful_transformer_depth_of_n):
-
 <img src="https://latex.codecogs.com/svg.latex?KL%20divergence(stateful_transformer_depth_of_n%20%7C%7C%20stateful_transformer_depth_of_n_plus_one)%20%3C%20KL_divergence(stateful_transformer_depth_of_n_minus_one%20%7C%7C%20stateful_transformer_depth_of_n)" />
-```
