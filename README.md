@@ -8,7 +8,7 @@ When a transformer generates a token, the last hidden state's information (n_emb
 
 Enrich token embeddings with the last hidden state of the inference step that generated them.
 
-I used a custom architecture, similar to attention and LSTM's input gates:
+I used a custom architecture, similar to attention and LSTM input gates:
 
 *   **Component-wise key-query attention:** Token embeddings act as queries, and `nn.Linear(hidden_states)` provides the keys.
 *   `nn.Linear(hidden_states)` generates the values.
@@ -16,7 +16,7 @@ I used a custom architecture, similar to attention and LSTM's input gates:
 
 ## Theoretical Challenge
 
-This architecture is fundamentally recurrent, which theoretically hinders parallelization during training.  This is a significant drawback for Transformers.
+This architecture is fundamentally recurrent, which theoretically hinders parallelization during training.
 
 ## Proposed Solution: Parallel Training for a Recurrent Architecture
 
@@ -39,6 +39,8 @@ $CE_{loss}(T_n) < CE_{loss}(T_0)$ for every recurrence depth n during training. 
 
 ## Practical observations
 
-This architecture, although theoretically promising, is only useful for very shallow transformers. Indeed, the parallelized training performs multiple backpropagation steps consecutively on each batch of data, which necessitates do dial down the learning rate of recurrence training. This implies that, even though the stateful transformer far exceeds the performance of a vanilla transformer in terms of performance vs. number of training epochs, it lags behind when the compute intesnity of each epoch is taken into account.
+This architecture, although theoretically promising, is only useful for very shallow transformers. Indeed, the parallelized training performs multiple backpropagation steps consecutively on each batch of data, which necessitates do dial down the learning rate for recurrence training. This implies that, even though the stateful transformer far exceeds the performance of a vanilla transformer in terms of performance vs. number of training epochs, it lags behind when the compute intensity of each epoch is taken into account.
 
-It should be noted, though, that even accounting for the compute overhead, the stateful transfomrer outperforms the base architecture for very shallow transformers. Hence the "*partial* failure mentioned above. You can test the above stateful_gpt.py with n_layers = 2 to observe that.
+It should be noted, though, that even accounting for the compute overhead, the stateful transfomrer outperforms the base architecture for very shallow transformers. Hence the "**partial**" failure mentioned above. You can test this by setting n_layers = 2 in the stateful_gpt.py training script.
+
+It should be noted, though, that for a fully trained Stateful Transformer, Norm(enrichment) ~ Norm(token_embeddings) * 0.2, meaning that some information indeed flows through the recurrent connection. It's just not worth the training overhead, in most cases.
