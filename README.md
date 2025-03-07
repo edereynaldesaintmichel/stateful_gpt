@@ -34,5 +34,4 @@ To mitigate the parallelization issue, a parallel training technique was devised
 The discrepancy between training and inference is addressed by ensuring stability during training. If the CE loss remains controlled with increased recurrence depth during training, the model should be stable even with theoretically infinite recurrence depth during inference.
 
 More formally, training ensures that:
-
-<img src="https://latex.codecogs.com/svg.latex?KL%20divergence(stateful_transformer_depth_of_n%20%7C%7C%20stateful_transformer_depth_of_n_plus_one)%20%3C%20KL_divergence(stateful_transformer_depth_of_n_minus_one%20%7C%7C%20stateful_transformer_depth_of_n)" />
+$$D_{KL}(T_n \parallel T_{n+1}) < D_{KL}(T_{n-1} \parallel T_n)$$
