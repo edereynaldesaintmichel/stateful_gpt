@@ -8,12 +8,12 @@ batch_size = 2048         # number of sequences processed in parallel
 block_size = 33           # maximum context length for predictions
 max_epochs = 40         # total number of epochs to train
 learning_rate = 3e-4 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-RECURSION_STEPS = 0      # number of additional recursion steps
+device = 'mps'
+RECURSION_STEPS = 1      # number of additional recursion steps
 exponential_base = 2      # loss multiplier for recursion steps
 n_embd = 64
 n_head = 8
-n_layer = 8
+n_layer = 2
 dropout = 0.2
 contribution_coeff = 1
 
@@ -119,11 +119,12 @@ class GPTLanguageModel(nn.Module):
         self.ln_f = nn.LayerNorm(n_embd)
         self.lm_head = nn.Linear(n_embd, vocab_size)
         self.hidden_state_value = nn.Sequential(
-            nn.Linear(n_embd, n_embd)
+            nn.Linear(n_embd, n_embd),
         )
         self.hidden_state_key = nn.Sequential(
             nn.Linear(n_embd, n_embd)
         )
+        self.token_query =  nn.Linear(n_embd, n_embd)
         self.relu = nn.ReLU()
         # Initialize weights
         self.apply(self._init_weights)
@@ -166,12 +167,11 @@ class GPTLanguageModel(nn.Module):
             hidden_states_keys = torch.zeros_like(prev_hidden_states)
             hidden_states_values[:, 1:] = self.hidden_state_value(prev_hidden_states[:, :-1])
             prev_hidden_state_values = hidden_states_values[:, -block_size:]
-            
             hidden_states_keys[:, 1:] = self.hidden_state_key(prev_hidden_states[:, :-1])
             prev_hidden_states_keys = hidden_states_keys[:, -block_size:]
 
-            pseudo_attention_scores = prev_hidden_states_keys * tok_emb
-            embeddings_enrichment = pseudo_attention_scores * prev_hidden_state_values
+            pseudo_attention_scores = self.relu(prev_hidden_states_keys * self.token_query(tok_emb))
+            embeddings_enrichment = prev_hidden_state_values * pseudo_attention_scores 
             
             print(f"tok_emb_norm: {tok_emb.norm()}, enrich_norm: {embeddings_enrichment.norm()}, pos_norm: {pos_emb.norm()}")
             tok_emb = tok_emb + embeddings_enrichment
@@ -206,12 +206,12 @@ class GPTLanguageModel(nn.Module):
 
 # ----------------------------
 # Load the pre-trained base model and compile
-original_state_dict = torch.load('stateful_base_model.pt', map_location=torch.device(device))
+original_state_dict = torch.load('stateful_model.pt', map_location=torch.device(device))
 filtered_state_dict = {k.replace('_orig_mod.', ''): v for k, v in original_state_dict.items()}
 
 model = GPTLanguageModel()
 print(sum(p.numel() for p in model.parameters())/1e6, 'M parameters')
-model.load_state_dict(filtered_state_dict, strict=False)
+# model.load_state_dict(filtered_state_dict, strict=False)
 model.to(device)
 # model.freeze_except('hidden_state')
 model.compile()

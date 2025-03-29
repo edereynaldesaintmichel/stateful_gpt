@@ -1,0 +1,134 @@
+[
+    {
+        "temperature": 1.43,
+        "evaluation_model_loss": 1.9652057640805505,
+        "information": 0.5532037161191456,
+        "type": "base"
+    },
+    {
+        "temperature": 1.25,
+        "evaluation_model_loss": 1.6199769398790465,
+        "information": 0.51109824358232,
+        "type": "base"
+    },
+    {
+        "temperature": 1.11,
+        "evaluation_model_loss": 1.432497191659124,
+        "information": 0.501027497798219,
+        "type": "base"
+    },
+    {
+        "temperature": 1.0,
+        "evaluation_model_loss": 1.3385820697358184,
+        "information": 0.4818003913894325,
+        "type": "base"
+    },
+    {
+        "temperature": 0.83,
+        "evaluation_model_loss": 1.1471665016707884,
+        "information": 0.4451050336900515,
+        "type": "base"
+    },
+    {
+        "temperature": 0.71,
+        "evaluation_model_loss": 1.0825146254619218,
+        "information": 0.427026490723286,
+        "type": "base"
+    },
+    {
+        "temperature": 0.62,
+        "evaluation_model_loss": 1.001432687139971,
+        "information": 0.3955825291015819,
+        "type": "base"
+    },
+    {
+        "temperature": 0.56,
+        "evaluation_model_loss": 0.9834968100790042,
+        "information": 0.3812182235071279,
+        "type": "base"
+    },
+    {
+        "temperature": 0.5,
+        "evaluation_model_loss": 0.9613750475395914,
+        "information": 0.3618952618453865,
+        "type": "base"
+    },
+    {
+        "temperature": 0.4,
+        "evaluation_model_loss": 0.9039722859284502,
+        "information": 0.3158630328441649,
+        "type": "base"
+    },
+    {
+        "temperature": 0.33,
+        "evaluation_model_loss": 0.9058464987868281,
+        "information": 0.2974512743628186,
+        "type": "base"
+    },
+    {
+        "temperature": 1.43,
+        "evaluation_model_loss": 2.09588715117844,
+        "information": 0.5623626111058014,
+        "type": "stateful"
+    },
+    {
+        "temperature": 1.25,
+        "evaluation_model_loss": 1.7059313465161339,
+        "information": 0.5322752346849898,
+        "type": "stateful"
+    },
+    {
+        "temperature": 1.11,
+        "evaluation_model_loss": 1.4303637907819349,
+        "information": 0.4953789279112754,
+        "type": "stateful"
+    },
+    {
+        "temperature": 1.0,
+        "evaluation_model_loss": 1.2944188012570814,
+        "information": 0.47257383966244726,
+        "type": "stateful"
+    },
+    {
+        "temperature": 0.83,
+        "evaluation_model_loss": 1.1698974643106246,
+        "information": 0.4518811881188119,
+        "type": "stateful"
+    },
+    {
+        "temperature": 0.71,
+        "evaluation_model_loss": 1.0633509573062516,
+        "information": 0.4262652272952362,
+        "type": "stateful"
+    },
+    {
+        "temperature": 0.62,
+        "evaluation_model_loss": 1.0084105601648043,
+        "information": 0.4080499653018737,
+        "type": "stateful"
+    },
+    {
+        "temperature": 0.56,
+        "evaluation_model_loss": 0.9720901406079626,
+        "information": 0.37906029601668817,
+        "type": "stateful"
+    },
+    {
+        "temperature": 0.5,
+        "evaluation_model_loss": 0.9391468945423507,
+        "information": 0.3601631678439956,
+        "type": "stateful"
+    },
+    {
+        "temperature": 0.4,
+        "evaluation_model_loss": 0.9032051310278595,
+        "information": 0.327842667465309,
+        "type": "stateful"
+    },
+    {
+        "temperature": 0.33,
+        "evaluation_model_loss": 0.8877556747562249,
+        "information": 0.2860281633875961,
+        "type": "stateful"
+    }
+]
